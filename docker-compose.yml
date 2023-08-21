@@ -1,0 +1,53 @@
+version: '3.5'
+
+services:
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+        volumes:
+            - ./hosts:/etc/nginx/conf.d
+            - ./www:/var/www
+            - ./logs:/var/log/nginx
+        links:
+            - php
+    php:
+        build: ./images/php
+        links:
+            - mariadb
+            - rabbitmq
+            - clickhouse
+        volumes:
+            - ./www:/var/www
+            - ./images/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+    mariadb:
+        image: mariadb:11
+        environment:
+            MYSQL_ROOT_PASSWORD: mainer
+            MYSQL_DATABASE: base
+            MYSQL_USER: broot
+            MYSQL_PASSWORD: mainer
+        volumes:
+            - ./mariadb:/var/lib/mysql
+             - ./mariadb-config/.cnf:/etc/mysql/mariadb.cnf
+        ports:
+            - "3306:3306"
+    rabbitmq:
+        image: rabbitmq:latest
+        environment:
+            RABBITMQ_DEFAULT_USER: main
+            RABBITMQ_DEFAULT_PASS: main
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+    clickhouse:
+        image: clickhouse/clickhouse-server:latest
+        hostname: clickhouse
+        ports:
+            - "8123:8123"
+            - "9000:9000"
+        volumes:
+            - ./clickhouse-config/users.xml:/etc/clickhouse-server/users.xml
+            - ./clickhouse:/var/lib/clickhouse
+
+
